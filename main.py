@@ -56,8 +56,6 @@ class Block(Button):
         
     
 
-
-
 player  = FirstPersonController()
 
 sky = Sky(texture='sky_sunset')
