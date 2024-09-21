@@ -7,6 +7,10 @@ from settings import *
 from models import Block, WorldEdit
 
 player  = FirstPersonController()
+player.x = CHUNKSIZE/2
+player.z = CHUNKSIZE/2
+player.y = 20
+player.gravity = 0.5
 
 sky = Sky()
 light = DirectionalLight(shadows=True)
