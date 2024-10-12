@@ -4,11 +4,12 @@ from ursina.shaders import basic_lighting_shader, lit_with_shadows_shader
 from perlin_noise import PerlinNoise
 
 from random import randint
+import pickle 
 
 scene.trees = {}
 
 class Tree(Entity):
-    def __init__(self, pos, parent_world, **kwargs):
+    def __init__(self, pos, **kwargs):
         super().__init__(
             parent=scene, #батьківський елемент
             model='assets\\minecraft_tree\\scene', # модель
@@ -91,7 +92,7 @@ class Chunk(Entity):
 
                 rand_num = randint(0, 200)
                 if rand_num == 52:
-                    tree = Tree((block_x,y+1,block_z), self)
+                    tree = Tree((block_x,y+1,block_z))
 
 
 class WorldEdit(Entity):
@@ -108,8 +109,66 @@ class WorldEdit(Entity):
                 if chunk_pos not in self.chunks:
                     chunk = Chunk(chunk_pos)
                     self.chunks[chunk_pos] = chunk
-   
+    
+    def save_game(self):
+        game_data = {
+            "player_pos": (self.player.x, self.player.y, self.player.z),
+            "chunks": [],
+            "trees": [],
+        }
+        for chunk_pos, chunk in self.chunks.items():
+            blocks_data = []
+            for block_pos, block in chunk.blocks.items():
+                blocks_data.append((block_pos, block.id))
+
+            game_data["chunks"].append((chunk_pos, blocks_data))
+
+        for tree_pos, tree in scene.trees.items():
+            game_data['trees'].append((tree_pos, tree.scale))
+
+        with open('save.dat', 'wb') as file:
+            pickle.dump(game_data, file)
+            print("Гру збережено")
+
+    
+    def clear_world(self):
+        for chunk in self.chunks.values():
+            for block in chunk.blocks.values():
+                destroy(block)
+            destroy(chunk)
+        for tree in scene.trees.values():
+            destroy(tree)
+        scene.trees.clear()
+        self.chunks.clear()
+
+    def load_world(self, chunk_data, tree_data):
+        for chunk_pos, blocks in chunk_data:
+            chunk = Chunk(chunk_pos)
+            for block_pos, block_id in blocks:
+                Block(block_pos, chunk, block_id)
+            self.chunks[chunk_pos] = chunk
+        for tree_pos, tree_scale in tree_data:
+            tree = Tree(tree_pos)
+            tree.scale = tree_scale
+
+    def load_game(self):
+
+        with open('save.dat', 'rb') as file:
+            game_data = pickle.load(file)
+
+            self.clear_world()
+            self.load_world(game_data["chunks"], game_data['trees'])
+            self.player.x, self.player.y, self.player.z = game_data["player_pos"]
+
+            print("Гру завантажено")
+            
+
     def input(self, key):
+        if key == 'k':
+            self.save_game()
+        if key == 'l':
+            self.load_game()
+
         if key == 'left mouse down':
             hit_info = raycast(camera.world_position, camera.forward, distance=10)
             if hit_info.hit:

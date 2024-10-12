@@ -21,6 +21,7 @@ world.generate_world()
 
 def input(key):
     player.gravity = 0.5
+    
 # scene.fog_density = (5, 50)   # sets linear density start and end
 # axe = Entity(model='assets\\minecraft_diamond-pickaxe\\scene', scale=0.05, collider='box')
 
