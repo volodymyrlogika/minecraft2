@@ -103,12 +103,15 @@ class WorldEdit(Entity):
         self.player = player
 
     def generate_world(self):
+        self.clear_world()
         for x in range(WORLDSIZE):
             for z in range(WORLDSIZE):
                 chunk_pos = (x,z)
                 if chunk_pos not in self.chunks:
                     chunk = Chunk(chunk_pos)
                     self.chunks[chunk_pos] = chunk
+        
+        self.menu.toggle_menu()
     
     def save_game(self):
         game_data = {
@@ -130,7 +133,8 @@ class WorldEdit(Entity):
             pickle.dump(game_data, file)
             print("Гру збережено")
 
-    
+        self.menu.toggle_menu()
+
     def clear_world(self):
         for chunk in self.chunks.values():
             for block in chunk.blocks.values():
@@ -139,7 +143,8 @@ class WorldEdit(Entity):
         for tree in scene.trees.values():
             destroy(tree)
         scene.trees.clear()
-        self.chunks.clear()
+        self.chunks = {}
+        
 
     def load_world(self, chunk_data, tree_data):
         for chunk_pos, blocks in chunk_data:
@@ -161,7 +166,9 @@ class WorldEdit(Entity):
             self.player.x, self.player.y, self.player.z = game_data["player_pos"]
 
             print("Гру завантажено")
-            
+
+        self.menu.toggle_menu()
+
 
     def input(self, key):
         if key == 'k':
@@ -173,12 +180,13 @@ class WorldEdit(Entity):
             hit_info = raycast(camera.world_position, camera.forward, distance=10)
             if hit_info.hit:
                 block = Block(hit_info.entity.position + hit_info.normal, hit_info.entity.parent, Block.id)
+
         if key == 'right mouse down' and mouse.hovered_entity:
             if isinstance(mouse.hovered_entity, Block):
                 block = mouse.hovered_entity
                 chunk = block.parent
                 del chunk.blocks[(block.x, block.y, block.z)]
-                destroy(mouse.hovered_entity)
+                destroy(block)
             if isinstance(mouse.hovered_entity, Tree):
                 tree = mouse.hovered_entity
                 del scene.trees[(tree.x, tree.y, tree.z)]
