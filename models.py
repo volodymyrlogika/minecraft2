@@ -24,8 +24,6 @@ class Tree(Entity):
 class Block(Button):
     id = 3
     def __init__(self, pos, parent_world, block_id=3, **kwargs):
-        # Конвертуємо позицію в цілі числа
-        pos = (int(pos[0]), int(pos[1]), int(pos[2]))
         super().__init__(
             parent=parent_world, #батьківський елемент
             model='cube', # модель
@@ -38,7 +36,7 @@ class Block(Button):
             shader=basic_lighting_shader,
             origin_y=-0.5,
             **kwargs)   
-        parent_world.blocks[pos] = self  
+        parent_world.blocks[(self.x, self.y,self.z)] = self  
         self.id = block_id
 
 
@@ -50,7 +48,6 @@ class Chunk(Entity):
         self.noise = PerlinNoise(octaves=2, seed=3504)
         self.is_simplify = False
         self.default_texture = 3
-        
     
     def simplify_chunk(self):
         """Спрощуємо чанк в один суцільний блок для оптимізації гри"""
@@ -160,15 +157,18 @@ class WorldEdit(Entity):
             tree.scale = tree_scale
 
     def load_game(self):
+        try:
+            with open('save.dat', 'rb') as file:
+                game_data = pickle.load(file)
 
-        with open('save.dat', 'rb') as file:
-            game_data = pickle.load(file)
+                self.clear_world()
+                self.load_world(game_data["chunks"], game_data['trees'])
+                self.player.x, self.player.y, self.player.z = game_data["player_pos"]
 
+                print("Гру завантажено")
+        except:
             self.clear_world()
-            self.load_world(game_data["chunks"], game_data['trees'])
-            self.player.x, self.player.y, self.player.z = game_data["player_pos"]
-
-            print("Гру завантажено")
+            self.generate_world()
 
         self.menu.toggle_menu()
 
@@ -184,16 +184,15 @@ class WorldEdit(Entity):
         if key == 'left mouse down':
             hit_info = raycast(camera.world_position, camera.forward, distance=10)
             if hit_info.hit:
-                block = Block(hit_info.entity.position + hit_info.normal, hit_info.entity.parent, Block.id)
+                if isinstance(hit_info.entity, Block):
+                    block = Block(hit_info.entity.position + hit_info.normal, hit_info.entity.parent, Block.id)
 
         if key == 'right mouse down' and mouse.hovered_entity:
             if isinstance(mouse.hovered_entity, Block):
                 block = mouse.hovered_entity
                 chunk = block.parent
-                block_pos =  (int(block.x), int(block.y), int(block.z))
-                if block_pos in chunk.blocks:
-                    destroy(chunk.blocks[block_pos])  # Видаляємо блок із сцени
-                    del chunk.blocks[block_pos]
+                del chunk.blocks[(block.x, block.y, block.z)]
+                destroy(block)
             if isinstance(mouse.hovered_entity, Tree):
                 tree = mouse.hovered_entity
                 del scene.trees[(tree.x, tree.y, tree.z)]

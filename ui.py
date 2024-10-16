@@ -38,6 +38,7 @@ class Menu(Entity):
         mouse.locked = not mouse.locked
         mouse.visible = not mouse.visible    
 
+
 if __name__ == "__main__":
     app = Ursina()
     menu = Menu(app)
