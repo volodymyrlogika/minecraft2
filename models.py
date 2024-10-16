@@ -24,6 +24,8 @@ class Tree(Entity):
 class Block(Button):
     id = 3
     def __init__(self, pos, parent_world, block_id=3, **kwargs):
+        # Конвертуємо позицію в цілі числа
+        pos = (int(pos[0]), int(pos[1]), int(pos[2]))
         super().__init__(
             parent=parent_world, #батьківський елемент
             model='cube', # модель
@@ -36,7 +38,7 @@ class Block(Button):
             shader=basic_lighting_shader,
             origin_y=-0.5,
             **kwargs)   
-        parent_world.blocks[(self.x, self.y,self.z)] = self  
+        parent_world.blocks[pos] = self  
         self.id = block_id
 
 
@@ -48,7 +50,7 @@ class Chunk(Entity):
         self.noise = PerlinNoise(octaves=2, seed=3504)
         self.is_simplify = False
         self.default_texture = 3
-        self.generate_chunk()
+        
     
     def simplify_chunk(self):
         """Спрощуємо чанк в один суцільний блок для оптимізації гри"""
@@ -109,6 +111,7 @@ class WorldEdit(Entity):
                 chunk_pos = (x,z)
                 if chunk_pos not in self.chunks:
                     chunk = Chunk(chunk_pos)
+                    chunk.generate_chunk()
                     self.chunks[chunk_pos] = chunk
         
         self.menu.toggle_menu()
@@ -171,6 +174,8 @@ class WorldEdit(Entity):
 
 
     def input(self, key):
+        self.player.gravity = 0.5
+
         if key == 'k':
             self.save_game()
         if key == 'l':
@@ -185,8 +190,10 @@ class WorldEdit(Entity):
             if isinstance(mouse.hovered_entity, Block):
                 block = mouse.hovered_entity
                 chunk = block.parent
-                del chunk.blocks[(block.x, block.y, block.z)]
-                destroy(block)
+                block_pos =  (int(block.x), int(block.y), int(block.z))
+                if block_pos in chunk.blocks:
+                    destroy(chunk.blocks[block_pos])  # Видаляємо блок із сцени
+                    del chunk.blocks[block_pos]
             if isinstance(mouse.hovered_entity, Tree):
                 tree = mouse.hovered_entity
                 del scene.trees[(tree.x, tree.y, tree.z)]

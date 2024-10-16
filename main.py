@@ -24,12 +24,13 @@ menu.toggle_menu()
 mouse.locked = False
 mouse.visible = True
 
-def input(key):
-    player.gravity = 0.5
-    
-# scene.fog_density = (5, 50)   # sets linear density start and end
-# axe = Entity(model='assets\\minecraft_diamond-pickaxe\\scene', scale=0.05, collider='box')
 
+def input(key):
+    if key == 'escape':
+        menu.toggle_menu()
+    
+# туман
+# scene.fog_density = (5, 50)   # sets linear density start and end
 
 window.fullscreen = True
 app.run()

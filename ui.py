@@ -30,9 +30,6 @@ class Menu(Entity):
         MenuButton("Зберегти", game.save_game, 0, -0.13, self)
         MenuButton("Вийти", application.quit, 0, -0.26, self)
    
-    def input(self, key):
-        if key=='escape':
-            self.toggle_menu()
 
     def toggle_menu(self):
         application.paused = not application.paused
