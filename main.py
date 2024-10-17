@@ -25,12 +25,5 @@ mouse.locked = False
 mouse.visible = True
 
 
-def input(key):
-    if key == 'escape':
-        menu.toggle_menu()
-    
-# туман
-# scene.fog_density = (5, 50)   # sets linear density start and end
-
 window.fullscreen = True
 app.run()
