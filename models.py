@@ -24,9 +24,9 @@ class Tree(Entity):
 
 
 class Block(Button):
-    id = 3
+    id = DEFAULT_TEXTURE
 
-    def __init__(self, pos, parent_world, block_id=3, **kwargs):
+    def __init__(self, pos, parent_world, block_id=DEFAULT_TEXTURE, **kwargs):
         super().__init__(
             parent=parent_world,  # батьківський елемент
             model='cube',  # модель
@@ -48,9 +48,9 @@ class Chunk(Entity):
         super().__init__(model=None, collider=None, shader=basic_lighting_shader, **kwargs)
         self.chunk_pos = chunk_pos
         self.blocks = {}
-        self.noise = PerlinNoise(octaves=2, seed=3504)
+        self.noise = PerlinNoise(octaves=4, seed=3504)
         self.is_simplify = False
-        self.default_texture = 3
+        self.default_texture = DEFAULT_TEXTURE
 
     def simplify_chunk(self):
         """Спрощуємо чанк в один суцільний блок для оптимізації гри"""
@@ -101,6 +101,10 @@ class WorldEdit(Entity):
         self.chunks = {}
         self.current_chunk = None
         self.player = player
+        # Додаємо блок, що тримається в руках
+        self.held_block = Entity(model='cube', scale=(0.2, 0.2, 0.2), parent=camera.ui, rotation = Vec3(-45, -30, 0),
+                                 position=(0.6, -0.4), texture=block_textures[Block.id], shader=basic_lighting_shader)
+
 
     def generate_world(self):
         self.clear_world()
@@ -129,7 +133,7 @@ class WorldEdit(Entity):
 
         for tree_pos, tree in scene.trees.items():
             game_data['trees'].append((tree_pos, tree.scale))
-
+    
         with open('save.dat', 'wb') as file:
             pickle.dump(game_data, file)
             print("Гру збережено")
@@ -202,10 +206,12 @@ class WorldEdit(Entity):
             Block.id += 1
             if len(block_textures) <= Block.id:
                 Block.id = 0
+            self.held_block.texture = block_textures[Block.id]
         if key == "scroll down":
             Block.id -= 1
             if Block.id < 0:
                 Block.id = len(block_textures)-1
+            self.held_block.texture = block_textures[Block.id]
 
     def update(self):
         if self.player.y < -30:
